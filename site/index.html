@@ -284,10 +284,10 @@ function handScreen(){const L=avatar.getObjectByName('LeftHand'),R=avatar.getObj
  return {x:(a.x+1)/2*innerWidth,y:(1-a.y)/2*innerHeight};}
 function ropeRaise(){return new Promise(r=>{avatar.rotation.y=0;play('pull_rope',0.3);
  const els=q('#reveal .rise');els.forEach(e=>{e.style.transition='none';e.style.transform='translateY(110vh)';});
- ropeSvg.style.display='block';let prev=null,acc=0;const need=innerHeight*1.6,t0=performance.now();
+ ropeSvg.style.display='block';let prev=null,acc=0;const need=innerHeight*0.6,t0=performance.now();
  const f=t=>{const h=handScreen();ropeLine.setAttribute('x1',h.x);ropeLine.setAttribute('y1',h.y);ropeLine.setAttribute('x2',h.x);ropeLine.setAttribute('y2',innerHeight+10);
   if(prev!==null&&h.y>prev)acc+=h.y-prev; prev=h.y;
-  if(t-t0>14000)acc=need;                       // safety: never get stuck
+  if(t-t0>9000)acc=need;                       // safety: never get stuck
   const prog=Math.min(1,acc/need);
   els.forEach((e,i)=>{const start=i*0.07,k=Math.max(0,Math.min(1,(prog-start)/0.45));const ease=1-Math.pow(1-k,3);e.style.transform=`translateY(${(1-ease)*110}vh)`;});
   if(prog>=1){els.forEach(e=>{e.style.transform='';e.style.transition='';e.classList.add('up');});ropeSvg.style.display='none';r();}
@@ -356,7 +356,7 @@ async function run(){
   expr('happy');
   await walkTo(Math.max(90,innerWidth*0.09));await turnTo(0,300);
   avatar.position.z=0.5;a=play('stand_to_sit',0.3);
-  await new Promise(r=>{const t0=performance.now(),dur=a.getClip().duration*1000*0.95;const f=t=>{const k=Math.min(1,(t-t0)/dur);avatar.position.y=-0.8*(k*k*(3-2*k));k<1?requestAnimationFrame(f):r()};requestAnimationFrame(f);});
+  await new Promise(r=>{const t0=performance.now(),dur=a.getClip().duration*1000*0.95;const f=t=>{const k=Math.min(1,(t-t0)/dur);avatar.position.y=-0.62*(k*k*(3-2*k));k<1?requestAnimationFrame(f):r()};requestAnimationFrame(f);});
   play('sitting_idle',0.3);expr('proud');tracking=true;
   again.hidden=false;gridbtn.hidden=false;
 }
