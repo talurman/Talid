@@ -354,7 +354,7 @@ async function run(){
   await waitClip(a,0.95);
   // 7. walk to the corner and sit behind the block (only her upper body shows)
   expr('happy');
-  await walkTo(Math.max(90,innerWidth*0.09));await turnTo(0,300);
+  await walkTo(Math.max(170,innerWidth*0.13));await turnTo(0,300);
   avatar.position.z=0.5;a=play('stand_to_sit',0.3);
   await new Promise(r=>{const t0=performance.now(),dur=a.getClip().duration*1000*0.95;const f=t=>{const k=Math.min(1,(t-t0)/dur);avatar.position.y=-0.62*(k*k*(3-2*k));k<1?requestAnimationFrame(f):r()};requestAnimationFrame(f);});
   play('sitting_idle',0.3);expr('proud');tracking=true;
