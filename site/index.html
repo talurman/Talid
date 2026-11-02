@@ -144,8 +144,32 @@ fetch('avatar.txt').then(r=>r.text()).then(t=>{const bin=Uint8Array.from(atob(t.
   mixer=new THREE.AnimationMixer(avatar);
   g.animations.forEach(c=>{acts[c.name]=mixer.clipAction(c);});
   ['mma_low_kick','jab_punch','stomp','waving'].forEach(n=>{acts[n].setLoop(THREE.LoopOnce);acts[n].clampWhenFinished=true;});
+  avatar.traverse(o=>{if(o.isMesh&&o.morphTargetDictionary){faces.push(o);}});
   say('ready — use the page; the avatar arrives 5s after your first click');
 },e=>say('could not load avatar'));}).catch(()=>say('could not load avatar'));
+
+// ---------- facial expressions (shape keys made in Blender + Ready Player Me visemes) ----------
+const faces=[];const face={};const faceTgt={};
+function setFace(o){for(const k in faceTgt)faceTgt[k]=0;Object.assign(faceTgt,o);}
+const EXPR={
+  neutral:{},
+  curious:{brows_up:0.7,viseme_O:0.25},
+  angry:{brows_angry:1,viseme_SS:0.5},
+  shout:{brows_angry:1,viseme_aa:0.9},
+  effort:{brows_angry:0.8,viseme_E:0.7},
+  happy:{smile:1,brows_up:0.4},
+  proud:{smile:0.8,brows_up:0.2,viseme_I:0.2}
+};
+const expr=n=>setFace(EXPR[n]||{});
+let blinkT=2+Math.random()*3,blinkV=0;
+function updateFace(dt){
+  blinkT-=dt; if(blinkT<0){blinkV=1;blinkT=2.2+Math.random()*3.5;}
+  blinkV=Math.max(0,blinkV-dt*7);
+  const lid=blinkV>0?Math.sin(blinkV*Math.PI):0;
+  for(const k of new Set([...Object.keys(face),...Object.keys(faceTgt)])){const t=faceTgt[k]||0;face[k]=(face[k]||0)+(t-(face[k]||0))*Math.min(1,dt*10);}
+  face.blink_L=Math.max(lid,faceTgt.blink_L||0);face.blink_R=Math.max(lid,faceTgt.blink_R||0);
+  for(const m of faces){const d=m.morphTargetDictionary;for(const k in face){const i=d[k];if(i!==undefined)m.morphTargetInfluences[i]=face[k];}}
+}
 
 function play(name,fade=0.25){const a=acts[name];if(!a)return;a.reset().setEffectiveWeight(1).play();
  if(current&&current!==a)current.crossFadeTo(a,fade,false);current=a;return a;}
@@ -176,28 +200,28 @@ const centerX=el=>{const r=el.getBoundingClientRect();return r.left+r.width/2};
 let started=false,armed=false,timer;
 async function run(){
   if(started||!avatar)return;started=true;say('');
-  avatar.visible=true;avatar.position.set(screenToWorldX(innerWidth+120),0,0);
+  avatar.visible=true;avatar.position.set(screenToWorldX(innerWidth+120),0,0);expr('curious');
   const head=document.querySelector('.intro'),panel=document.getElementById('panel');
   // 1. walk in from the right edge to the headline, punch it
   await walkTo(centerX(head)+innerWidth*0.04);
   await turnTo(-Math.PI/2,150);
-  let a=play('jab_punch',0.2); await waitClip(a,0.38);
+  expr('angry');let a=play('jab_punch',0.2); await waitClip(a,0.3);expr('shout');await waitClip(a,0.38);
   launch(q('.intro [data-b]'),worldToScreenX(avatar.position.x),1.1);
-  await waitClip(a,0.95);
+  await waitClip(a,0.95);expr('proud');
   // 2. walk to the card, kick it
   await walkTo(centerX(panel)+innerWidth*0.12);
   await turnTo(-Math.PI/2,150);
-  a=play('mma_low_kick',0.2); await waitClip(a,0.42);
+  expr('effort');a=play('mma_low_kick',0.2); await waitClip(a,0.36);expr('shout');await waitClip(a,0.42);
   launch([...q('.tab'),panel],worldToScreenX(avatar.position.x),1.25);
   await waitClip(a,0.95);
   // 3. stomp: everything left falls
   await turnTo(0,300);
-  a=play('stomp',0.2); await waitClip(a,0.5);
+  expr('angry');a=play('stomp',0.2); await waitClip(a,0.45);expr('shout');await waitClip(a,0.5);
   launch(q('[data-b]'),worldToScreenX(avatar.position.x),0.8);
   await waitClip(a,0.95);
   // 4. wave, then idle
-  a=play('waving',0.25); await waitClip(a,0.98);
-  play('breathing_idle',0.4);
+  expr('happy');a=play('waving',0.25); await waitClip(a,0.98);
+  play('breathing_idle',0.4);expr('proud');
   again.hidden=false;
 }
 function arm(){if(armed)return;armed=true;clearTimeout(timer);timer=setTimeout(run,reduce?1500:5000);}
@@ -205,8 +229,8 @@ function arm(){if(armed)return;armed=true;clearTimeout(timer);timer=setTimeout(r
 setTimeout(()=>{if(!armed){armed=true;run();}},15000); // fallback for someone who only watches
 
 again.onclick=()=>{pieces.forEach(p=>{p.el.style.transform='';p.el._p=null});pieces.length=0;
- avatar.visible=false;Object.values(acts).forEach(x=>x.stop());current=null;started=false;armed=false;again.hidden=true;show(0);say('ready — click anything to start the 5s timer');};
+ expr('neutral');avatar.visible=false;Object.values(acts).forEach(x=>x.stop());current=null;started=false;armed=false;again.hidden=true;show(0);say('ready — click anything to start the 5s timer');};
 
 const clock=new THREE.Clock();
-renderer.setAnimationLoop(()=>{const dt=clock.getDelta();if(mixer)mixer.update(dt);renderer.render(scene,cam);});
+renderer.setAnimationLoop(()=>{const dt=clock.getDelta();if(mixer)mixer.update(dt);if(faces.length)updateFace(dt);renderer.render(scene,cam);});
 </script>
