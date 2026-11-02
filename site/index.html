@@ -44,10 +44,13 @@ button:focus-visible{outline:3px solid var(--ink);outline-offset:2px}
 /* ===== Layer 3: the revealed order (Swiss grid). 12 cols, 8px baseline, one family, black/white ===== */
 :root{--r-bg:#FFFFFF;--r-ink:#000000;--r-mid:#8A8A8A;--r-ph:#EDEDED;--r-guide:rgba(255,0,0,.12);--r-sans:'IBM Plex Sans Hebrew',Arial,sans-serif;--r-mono:'IBM Plex Mono',ui-monospace,monospace;--u:8px}
 .shell{position:relative;z-index:2}
-#reveal{position:fixed;inset:0;z-index:1;background:var(--r-bg);color:var(--r-ink);font-family:var(--r-sans);opacity:0;transition:opacity .9s ease;pointer-events:none;
+#reveal{position:fixed;inset:0;z-index:1;background:var(--r-bg);color:var(--r-ink);font-family:var(--r-sans);transform:translateX(102%);pointer-events:none;box-shadow:-12px 0 0 rgba(0,0,0,.06);
  padding-top:calc(3*var(--u) + env(safe-area-inset-top,0px));padding-bottom:calc(3*var(--u) + env(safe-area-inset-bottom,0px));
  padding-left:max(24px,env(safe-area-inset-left,0px));padding-right:max(24px,env(safe-area-inset-right,0px));box-sizing:border-box}
-#reveal.on{opacity:1;pointer-events:auto}
+#reveal.on{pointer-events:auto}
+.rise{transform:translateY(110vh);transition:transform .7s cubic-bezier(.2,.8,.2,1)}
+.rise.up{transform:none}
+#seat{position:absolute;left:0;bottom:0;background:var(--r-ink);color:var(--r-bg);font:500 11px var(--r-mono);display:flex;align-items:flex-start;justify-content:flex-start;padding:6px 8px;box-sizing:border-box}
 .g{height:100%;display:grid;grid-template-columns:repeat(12,minmax(0,1fr));grid-template-rows:auto auto minmax(0,1fr) 22%;column-gap:calc(3*var(--u));row-gap:calc(3*var(--u));position:relative}
 .g>*{min-width:0}
 .lbl{font-family:var(--r-mono);font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--r-mid);margin:0 0 var(--u)}
@@ -124,24 +127,25 @@ button:focus-visible{outline:3px solid var(--ink);outline-offset:2px}
 <section id="reveal" dir="rtl" aria-label="השכבה שנחשפה" aria-hidden="true">
   <div class="g">
     <div class="guides" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
-    <div class="r-meta rule">
+    <div class="r-meta rule rise">
       <p style="grid-column:1/4">תעודת זהות</p>
       <p style="grid-column:4/7" dir="ltr">ORDER / BREAK</p>
       <p style="grid-column:7/10">[שנה]</p>
       <p style="grid-column:10/13" dir="ltr">[HIT]</p>
     </div>
-    <div class="r-name"><p class="lbl">שם</p><div class="ph-title">[שם]</div></div>
-    <div class="r-role rule"><p class="lbl">תפקיד</p><div class="lines" style="flex:none"><i></i><i style="width:60%"></i></div></div>
-    <div class="r-text rule"><p class="lbl">עמדה — 300–500 מילים</p>
+    <div class="r-name rise"><p class="lbl">שם</p><div class="ph-title">[שם]</div></div>
+    <div class="r-role rule rise"><p class="lbl">תפקיד</p><div class="lines" style="flex:none"><i></i><i style="width:60%"></i></div></div>
+    <div class="r-text rule rise"><p class="lbl">עמדה — 300–500 מילים</p>
       <div class="lines"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div></div>
-    <div class="r-facts rule"><p class="lbl">עובדות</p>
+    <div class="r-facts rule rise"><p class="lbl">עובדות</p>
       <div class="fact"><p class="lbl">ניסיון</p><b></b><b></b></div>
       <div class="fact"><p class="lbl">השכלה</p><b></b><b></b></div>
       <div class="fact"><p class="lbl">כלים</p><b></b><b></b></div>
     </div>
-    <div class="r-mat"><div class="cell"><span>חומר גלם 01</span></div><div class="cell"><span>חומר גלם 02</span></div><div class="cell"><span>חומר גלם 03</span></div><div class="cell avatar" id="avatarCell"><span>האווטאר</span></div></div>
+    <div class="r-mat"><div class="cell rise"><span>חומר גלם 01</span></div><div class="cell rise"><span>חומר גלם 02</span></div><div class="cell rise"><span>חומר גלם 03</span></div><div class="cell rise"><span>חומר גלם 04</span></div></div>
     <div class="r-debris"><p class="lbl" style="margin-top:var(--u)">שברים — הטופסולוגיה</p></div>
   </div>
+  <div id="seat" aria-hidden="true">01</div>
 </section>
 <canvas id="stage3d" aria-hidden="true"></canvas>
 <p id="status">loading avatar…</p>
@@ -203,7 +207,7 @@ fetch('avatar.txt').then(r=>r.text()).then(t=>{const bin=Uint8Array.from(atob(t.
   avatar.traverse(o=>{if(o.isMesh){o.frustumCulled=false;}});
   mixer=new THREE.AnimationMixer(avatar);
   g.animations.forEach(c=>{acts[c.name]=mixer.clipAction(c);});
-  ['mma_low_kick','jab_punch','stomp','waving'].forEach(n=>{acts[n].setLoop(THREE.LoopOnce);acts[n].clampWhenFinished=true;});
+  ['mma_low_kick','jab_punch','stomp','waving','stand_to_sit'].forEach(n=>{acts[n].setLoop(THREE.LoopOnce);acts[n].clampWhenFinished=true;});
   avatar.traverse(o=>{if(o.isMesh&&o.morphTargetDictionary){faces.push(o);}});
   say('ready — use the page; the avatar arrives 5s after your first click');
 },e=>say('could not load avatar'));}).catch(()=>say('could not load avatar'));
@@ -239,6 +243,23 @@ function turnTo(y,ms=350){return new Promise(r=>{const s=avatar.rotation.y,t0=pe
 function walkTo(px,speed=1.1){return new Promise(r=>{const tx=screenToWorldX(px);avatar.rotation.y=tx<avatar.position.x?-Math.PI/2:Math.PI/2;play('female_walk');
  let last=performance.now();const f=t=>{const dt=(t-last)/1000;last=t;const d=tx-avatar.position.x;const step=Math.sign(d)*speed*dt;
   if(Math.abs(d)<=Math.abs(step)){avatar.position.x=tx;r();}else{avatar.position.x+=step;requestAnimationFrame(f);}};requestAnimationFrame(f);});}
+
+// ---------- building the new layer ----------
+const pxPerM=()=>innerHeight/VIEW_H;
+function placeSeat(){const s=document.getElementById('seat');const ppm=pxPerM();
+ s.style.width=Math.round(0.62*ppm)+'px';s.style.height=Math.round(0.47*ppm)+'px';s.style.bottom=Math.round(0.06*ppm)+'px';
+ s.style.left=Math.max(16,innerWidth*0.035)+'px';}
+addEventListener('resize',placeSeat);
+// she walks backwards dragging the layer in from the right edge
+function dragLayer(stopPx){return new Promise(r=>{avatar.rotation.y=Math.PI/2;play('pull_heavy',0.3);
+ const reach=0.42; let last=performance.now();const tx=screenToWorldX(stopPx);
+ const f=t=>{const dt=(t-last)/1000;last=t;avatar.position.x-=0.55*dt;
+  const edge=worldToScreenX(avatar.position.x+reach);reveal.style.transform=`translateX(${Math.max(0,edge)}px)`;
+  if(avatar.position.x<=tx){r();}else requestAnimationFrame(f)};requestAnimationFrame(f);});}
+// hand-over-hand pulls raise the grid blocks from below, one by one
+async function ropeRaise(){avatar.rotation.y=0;play('pull_rope',0.3);
+ for(const el of q('#reveal .rise')){await sleep(reduce?60:420);el.classList.add('up');}
+ await sleep(700);}
 
 // ---------- break physics for DOM pieces ----------
 const pieces=[];let simRunning=false;
@@ -278,13 +299,20 @@ async function run(){
   await turnTo(0,300);
   expr('angry');a=play('stomp',0.2); await waitClip(a,0.45);expr('shout');await waitClip(a,0.5);
   launch(q('[data-b]'),worldToScreenX(avatar.position.x),0.8);
-  reveal.classList.add('on');reveal.removeAttribute('aria-hidden');
   await waitClip(a,0.95);
-  // 4. wave, then idle
-  expr('happy');a=play('waving',0.25); await waitClip(a,0.98);
-  const cell=document.getElementById('avatarCell');
-  expr('curious');await walkTo(centerX(cell));await turnTo(0,300);
-  play('breathing_idle',0.4);expr('proud');
+  // 4. build: drag the new layer in from the side
+  expr('curious');await walkTo(innerWidth*0.86);
+  reveal.classList.add('on');reveal.removeAttribute('aria-hidden');placeSeat();
+  expr('effort');await dragLayer(innerWidth*0.22);
+  reveal.style.transition='transform .5s cubic-bezier(.2,.8,.2,1)';reveal.style.transform='translateX(0)';
+  // 5. pull the blocks up from below
+  await sleep(350);reveal.style.transition='';
+  expr('effort');await ropeRaise();
+  // 6. walk to the corner and sit on the block
+  expr('happy');const seat=document.getElementById('seat');
+  await walkTo(centerX(seat));await turnTo(0,300);
+  avatar.position.z=0.5;a=play('stand_to_sit',0.3);await waitClip(a,0.97);
+  play('sitting_idle',0.3);expr('proud');
   again.hidden=false;gridbtn.hidden=false;
 }
 function arm(){if(armed)return;armed=true;clearTimeout(timer);timer=setTimeout(run,reduce?1500:5000);}
@@ -293,7 +321,7 @@ setTimeout(()=>{if(!armed){armed=true;run();}},15000); // fallback for someone w
 
 const reveal=document.getElementById('reveal'),gridbtn=document.getElementById('gridbtn');
 gridbtn.onclick=()=>{const on=reveal.classList.toggle('grid-on');gridbtn.setAttribute('aria-pressed',on);gridbtn.textContent=on?'הסתר גריד':'הצג גריד';};
-again.onclick=()=>{reveal.classList.remove('on','grid-on');reveal.setAttribute('aria-hidden','true');gridbtn.hidden=true;gridbtn.textContent='הצג גריד';pieces.forEach(p=>{p.el.style.transform='';p.el._p=null});pieces.length=0;
+again.onclick=()=>{reveal.classList.remove('on','grid-on');reveal.style.transform='';avatar.position.z=0;q('#reveal .rise').forEach(e=>e.classList.remove('up'));reveal.setAttribute('aria-hidden','true');gridbtn.hidden=true;gridbtn.textContent='הצג גריד';pieces.forEach(p=>{p.el.style.transform='';p.el._p=null});pieces.length=0;
  expr('neutral');avatar.visible=false;Object.values(acts).forEach(x=>x.stop());current=null;started=false;armed=false;again.hidden=true;show(0);say('ready — click anything to start the 5s timer');};
 
 const clock=new THREE.Clock();
