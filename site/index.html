@@ -1,7 +1,7 @@
 <title>תעודת זהות – טל אורמן</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;700;800&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;700;800&family=IBM+Plex+Sans+Hebrew:wght@400;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
 <style>
 /* Layer 1 = the AI-default template, copied as generated. Single light look by design. */
 :root{--bg:#F5F4F0;--ink:#17171B;--muted:#4E4E57;--line:#E2E0D8;--chip:#D6D4CB;--card:#FFFFFF;--accent:#2F45E0;color-scheme:light}
@@ -40,6 +40,42 @@ button:focus-visible{outline:3px solid var(--ink);outline-offset:2px}
 #stage3d{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:20}
 #again{position:fixed;bottom:calc(16px + env(safe-area-inset-bottom,0px));left:max(16px,env(safe-area-inset-left,0px));z-index:30;min-height:44px;padding:0 18px;border-radius:999px;border:1.5px solid var(--ink);background:var(--bg);color:var(--ink);font-size:14px;cursor:pointer}
 #status{position:fixed;top:calc(8px + env(safe-area-inset-top,0px));left:max(16px,env(safe-area-inset-left,0px));z-index:30;font:12px/1.4 ui-monospace,monospace;color:var(--muted);direction:ltr}
+
+/* ===== Layer 3: the revealed order (Swiss grid). 12 cols, 8px baseline, one family, black/white ===== */
+:root{--r-bg:#FFFFFF;--r-ink:#000000;--r-mid:#8A8A8A;--r-ph:#EDEDED;--r-guide:rgba(255,0,0,.12);--r-sans:'IBM Plex Sans Hebrew',Arial,sans-serif;--r-mono:'IBM Plex Mono',ui-monospace,monospace;--u:8px}
+.shell{position:relative;z-index:2}
+#reveal{position:fixed;inset:0;z-index:1;background:var(--r-bg);color:var(--r-ink);font-family:var(--r-sans);opacity:0;transition:opacity .9s ease;pointer-events:none;
+ padding-top:calc(3*var(--u) + env(safe-area-inset-top,0px));padding-bottom:calc(3*var(--u) + env(safe-area-inset-bottom,0px));
+ padding-left:max(24px,env(safe-area-inset-left,0px));padding-right:max(24px,env(safe-area-inset-right,0px));box-sizing:border-box}
+#reveal.on{opacity:1;pointer-events:auto}
+.g{height:100%;display:grid;grid-template-columns:repeat(12,minmax(0,1fr));grid-template-rows:auto auto minmax(0,1fr) 22%;column-gap:calc(3*var(--u));row-gap:calc(3*var(--u));position:relative}
+.g>*{min-width:0}
+.lbl{font-family:var(--r-mono);font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--r-mid);margin:0 0 var(--u)}
+.rule{border-top:2px solid var(--r-ink);padding-top:var(--u)}
+.r-meta{grid-column:1/13;display:grid;grid-template-columns:subgrid;align-items:start}
+.r-meta>p{margin:0;font-family:var(--r-mono);font-size:12px;line-height:16px}
+.r-name{grid-column:1/8;grid-row:2}
+.r-name .ph-title{height:calc(12*var(--u));background:var(--r-ph);display:flex;align-items:flex-end;padding:var(--u);box-sizing:border-box;font:600 clamp(40px,6vw,96px)/1 var(--r-sans);color:#C9C9C9;letter-spacing:-.02em}
+.r-role{grid-column:8/13;grid-row:2;align-self:end}
+.r-text{grid-column:1/6;grid-row:3;display:flex;flex-direction:column;min-height:0}
+.r-facts{grid-column:6/9;grid-row:3;display:flex;flex-direction:column;gap:calc(2*var(--u))}
+.r-mat{grid-column:9/13;grid-row:3;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));grid-template-rows:repeat(2,minmax(0,1fr));gap:calc(3*var(--u));min-height:0}
+.r-debris{grid-column:1/13;grid-row:4;border-top:1px solid var(--r-ink);position:relative}
+.lines{display:flex;flex-direction:column;gap:calc(1.5*var(--u));overflow:hidden;min-height:0;flex:1}
+.lines i{display:block;height:var(--u);background:var(--r-ph)}
+.lines i:nth-child(7n){width:62%}.lines i:nth-child(5n){width:84%}
+.fact{display:grid;grid-template-columns:minmax(0,1fr);gap:4px}
+.fact b{display:block;height:calc(2*var(--u));background:var(--r-ph);width:80%}
+.fact b+b{width:55%;height:var(--u)}
+.cell{background:var(--r-ph);display:flex;align-items:flex-end;padding:var(--u);min-height:0;box-sizing:border-box}
+.cell span{font-family:var(--r-mono);font-size:11px;color:var(--r-mid)}
+.cell.avatar{background:transparent;outline:1px dashed var(--r-mid);outline-offset:-1px}
+.guides{position:absolute;inset:0;display:grid;grid-template-columns:repeat(12,minmax(0,1fr));column-gap:calc(3*var(--u));pointer-events:none;opacity:0;transition:opacity .3s}
+.guides i{background:var(--r-guide)}
+#reveal.grid-on .guides{opacity:1}
+#gridbtn{position:fixed;bottom:calc(16px + env(safe-area-inset-bottom,0px));left:calc(max(16px,env(safe-area-inset-left,0px)) + 132px);z-index:30;min-height:44px;padding:0 18px;border-radius:0;border:1.5px solid #000;background:#fff;color:#000;font:500 13px var(--r-mono);cursor:pointer}
+#again{border-radius:0!important;font-family:var(--r-mono)!important;background:#fff!important;border-color:#000!important;color:#000!important}
+@media (max-width:900px){#reveal{overflow:auto}.g{height:auto;grid-template-rows:none}.r-name,.r-role,.r-text,.r-facts,.r-mat,.r-debris{grid-column:1/13;grid-row:auto}.r-mat{height:60vw}.r-debris{height:30vh}}
 </style>
 
 <div class="shell" dir="rtl">
@@ -84,9 +120,33 @@ button:focus-visible{outline:3px solid var(--ink);outline-offset:2px}
   </footer>
 </div>
 
+
+<section id="reveal" dir="rtl" aria-label="השכבה שנחשפה" aria-hidden="true">
+  <div class="g">
+    <div class="guides" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+    <div class="r-meta rule">
+      <p style="grid-column:1/4">תעודת זהות</p>
+      <p style="grid-column:4/7" dir="ltr">ORDER / BREAK</p>
+      <p style="grid-column:7/10">[שנה]</p>
+      <p style="grid-column:10/13" dir="ltr">[HIT]</p>
+    </div>
+    <div class="r-name"><p class="lbl">שם</p><div class="ph-title">[שם]</div></div>
+    <div class="r-role rule"><p class="lbl">תפקיד</p><div class="lines" style="flex:none"><i></i><i style="width:60%"></i></div></div>
+    <div class="r-text rule"><p class="lbl">עמדה — 300–500 מילים</p>
+      <div class="lines"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div></div>
+    <div class="r-facts rule"><p class="lbl">עובדות</p>
+      <div class="fact"><p class="lbl">ניסיון</p><b></b><b></b></div>
+      <div class="fact"><p class="lbl">השכלה</p><b></b><b></b></div>
+      <div class="fact"><p class="lbl">כלים</p><b></b><b></b></div>
+    </div>
+    <div class="r-mat"><div class="cell"><span>חומר גלם 01</span></div><div class="cell"><span>חומר גלם 02</span></div><div class="cell"><span>חומר גלם 03</span></div><div class="cell avatar" id="avatarCell"><span>האווטאר</span></div></div>
+    <div class="r-debris"><p class="lbl" style="margin-top:var(--u)">שברים — הטופסולוגיה</p></div>
+  </div>
+</section>
 <canvas id="stage3d" aria-hidden="true"></canvas>
 <p id="status">loading avatar…</p>
 <button type="button" id="again" hidden>להתחיל מחדש</button>
+<button type="button" id="gridbtn" hidden aria-pressed="false">הצג גריד</button>
 
 <script>
 // ---- the template's own behaviour (tabs) ----
@@ -218,17 +278,22 @@ async function run(){
   await turnTo(0,300);
   expr('angry');a=play('stomp',0.2); await waitClip(a,0.45);expr('shout');await waitClip(a,0.5);
   launch(q('[data-b]'),worldToScreenX(avatar.position.x),0.8);
+  reveal.classList.add('on');reveal.removeAttribute('aria-hidden');
   await waitClip(a,0.95);
   // 4. wave, then idle
   expr('happy');a=play('waving',0.25); await waitClip(a,0.98);
+  const cell=document.getElementById('avatarCell');
+  expr('curious');await walkTo(centerX(cell));await turnTo(0,300);
   play('breathing_idle',0.4);expr('proud');
-  again.hidden=false;
+  again.hidden=false;gridbtn.hidden=false;
 }
 function arm(){if(armed)return;armed=true;clearTimeout(timer);timer=setTimeout(run,reduce?1500:5000);}
 ['pointerdown','keydown','wheel','touchstart'].forEach(ev=>addEventListener(ev,arm,{passive:true}));
 setTimeout(()=>{if(!armed){armed=true;run();}},15000); // fallback for someone who only watches
 
-again.onclick=()=>{pieces.forEach(p=>{p.el.style.transform='';p.el._p=null});pieces.length=0;
+const reveal=document.getElementById('reveal'),gridbtn=document.getElementById('gridbtn');
+gridbtn.onclick=()=>{const on=reveal.classList.toggle('grid-on');gridbtn.setAttribute('aria-pressed',on);gridbtn.textContent=on?'הסתר גריד':'הצג גריד';};
+again.onclick=()=>{reveal.classList.remove('on','grid-on');reveal.setAttribute('aria-hidden','true');gridbtn.hidden=true;gridbtn.textContent='הצג גריד';pieces.forEach(p=>{p.el.style.transform='';p.el._p=null});pieces.length=0;
  expr('neutral');avatar.visible=false;Object.values(acts).forEach(x=>x.stop());current=null;started=false;armed=false;again.hidden=true;show(0);say('ready — click anything to start the 5s timer');};
 
 const clock=new THREE.Clock();
