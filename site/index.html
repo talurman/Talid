@@ -38,7 +38,7 @@ button:focus-visible{outline:3px solid var(--ink);outline-offset:2px}
 /* break layer */
 [data-b]{will-change:transform;transform-origin:50% 50%}
 #stage3d{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:20}
-#again{position:fixed;bottom:calc(16px + env(safe-area-inset-bottom,0px));left:max(16px,env(safe-area-inset-left,0px));z-index:30;min-height:44px;padding:0 18px;border-radius:999px;border:1.5px solid var(--ink);background:var(--bg);color:var(--ink);font-size:14px;cursor:pointer}
+#again{position:fixed;bottom:calc(16px + env(safe-area-inset-bottom,0px));right:max(16px,env(safe-area-inset-right,0px));z-index:30;min-height:44px;padding:0 18px;border-radius:999px;border:1.5px solid var(--ink);background:var(--bg);color:var(--ink);font-size:14px;cursor:pointer}
 #status{position:fixed;top:calc(8px + env(safe-area-inset-top,0px));left:max(16px,env(safe-area-inset-left,0px));z-index:30;font:12px/1.4 ui-monospace,monospace;color:var(--muted);direction:ltr}
 
 /* ===== Layer 3: the revealed order (Swiss grid). 12 cols, 8px baseline, one family, black/white ===== */
@@ -50,7 +50,8 @@ button:focus-visible{outline:3px solid var(--ink);outline-offset:2px}
 #reveal.on{pointer-events:auto}
 .rise{transform:translateY(110vh);transition:transform .7s cubic-bezier(.2,.8,.2,1)}
 .rise.up{transform:none}
-#seat{position:absolute;left:0;bottom:0;background:var(--r-ink);color:var(--r-bg);font:500 11px var(--r-mono);display:flex;align-items:flex-start;justify-content:flex-start;padding:6px 8px;box-sizing:border-box}
+#seat.up{transform:none}
+#seat{position:fixed;left:0;bottom:0;z-index:25;transform:translateY(110%);transition:transform .6s cubic-bezier(.2,.8,.2,1);background:var(--r-ink);color:var(--r-bg);font:500 11px var(--r-mono);display:flex;align-items:flex-start;justify-content:flex-start;padding:6px 8px;box-sizing:border-box}
 .g{height:100%;display:grid;grid-template-columns:repeat(12,minmax(0,1fr));grid-template-rows:auto auto minmax(0,1fr) 22%;column-gap:calc(3*var(--u));row-gap:calc(3*var(--u));position:relative}
 .g>*{min-width:0}
 .lbl{font-family:var(--r-mono);font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--r-mid);margin:0 0 var(--u)}
@@ -76,7 +77,7 @@ button:focus-visible{outline:3px solid var(--ink);outline-offset:2px}
 .guides{position:absolute;inset:0;display:grid;grid-template-columns:repeat(12,minmax(0,1fr));column-gap:calc(3*var(--u));pointer-events:none;opacity:0;transition:opacity .3s}
 .guides i{background:var(--r-guide)}
 #reveal.grid-on .guides{opacity:1}
-#gridbtn{position:fixed;bottom:calc(16px + env(safe-area-inset-bottom,0px));left:calc(max(16px,env(safe-area-inset-left,0px)) + 132px);z-index:30;min-height:44px;padding:0 18px;border-radius:0;border:1.5px solid #000;background:#fff;color:#000;font:500 13px var(--r-mono);cursor:pointer}
+#gridbtn{position:fixed;bottom:calc(16px + env(safe-area-inset-bottom,0px));right:calc(max(16px,env(safe-area-inset-right,0px)) + 132px);z-index:30;min-height:44px;padding:0 18px;border-radius:0;border:1.5px solid #000;background:#fff;color:#000;font:500 13px var(--r-mono);cursor:pointer}
 #again{border-radius:0!important;font-family:var(--r-mono)!important;background:#fff!important;border-color:#000!important;color:#000!important}
 @media (max-width:900px){#reveal{overflow:auto}.g{height:auto;grid-template-rows:none}.r-name,.r-role,.r-text,.r-facts,.r-mat,.r-debris{grid-column:1/13;grid-row:auto}.r-mat{height:60vw}.r-debris{height:30vh}}
 </style>
@@ -145,8 +146,8 @@ button:focus-visible{outline:3px solid var(--ink);outline-offset:2px}
     <div class="r-mat"><div class="cell rise"><span>חומר גלם 01</span></div><div class="cell rise"><span>חומר גלם 02</span></div><div class="cell rise"><span>חומר גלם 03</span></div><div class="cell rise"><span>חומר גלם 04</span></div></div>
     <div class="r-debris"><p class="lbl" style="margin-top:var(--u)">שברים — הטופסולוגיה</p></div>
   </div>
-  <div id="seat" aria-hidden="true">01</div>
 </section>
+<div id="seat" aria-hidden="true">01</div>
 <canvas id="stage3d" aria-hidden="true"></canvas>
 <p id="status">loading avatar…</p>
 <button type="button" id="again" hidden>להתחיל מחדש</button>
@@ -244,10 +245,27 @@ function walkTo(px,speed=1.1){return new Promise(r=>{const tx=screenToWorldX(px)
  let last=performance.now();const f=t=>{const dt=(t-last)/1000;last=t;const d=tx-avatar.position.x;const step=Math.sign(d)*speed*dt;
   if(Math.abs(d)<=Math.abs(step)){avatar.position.x=tx;r();}else{avatar.position.x+=step;requestAnimationFrame(f);}};requestAnimationFrame(f);});}
 
+// ---------- after she sits: head and eyes follow the mouse ----------
+let tracking=false,mouseX=0,mouseY=0,lookYaw=0,lookPitch=0;
+addEventListener('pointermove',e=>{mouseX=e.clientX;mouseY=e.clientY;},{passive:true});
+const _q=new THREE.Quaternion(),_qp=new THREE.Quaternion(),_e=new THREE.Euler(),_v=new THREE.Vector3();
+function aim(bone,yaw,pitch){if(!bone)return;bone.updateWorldMatrix(true,false);
+ bone.getWorldQuaternion(_q);_e.set(pitch,yaw,0,'YXZ');const d=new THREE.Quaternion().setFromEuler(_e);
+ const w=d.multiply(_q);bone.parent.getWorldQuaternion(_qp);bone.quaternion.copy(_qp.invert().multiply(w));}
+function updateLook(dt){const head=avatar.getObjectByName('Head');if(!head)return;
+ head.getWorldPosition(_v);_v.project(cam);
+ const hx=(_v.x+1)/2*innerWidth,hy=(1-_v.y)/2*innerHeight;
+ const ty=THREE.MathUtils.clamp((mouseX-hx)/innerWidth*2.2,-1,1)*0.9;
+ const tp=THREE.MathUtils.clamp((mouseY-hy)/innerHeight*2.2,-1,1)*0.45;
+ const k=Math.min(1,dt*6);lookYaw+=(ty-lookYaw)*k;lookPitch+=(tp-lookPitch)*k;
+ aim(avatar.getObjectByName('Neck'),lookYaw*0.35,lookPitch*0.3);
+ aim(head,lookYaw*0.55,lookPitch*0.6);
+ for(const n of ['LeftEye','RightEye'])aim(avatar.getObjectByName(n),lookYaw*0.25,lookPitch*0.2);}
+
 // ---------- building the new layer ----------
 const pxPerM=()=>innerHeight/VIEW_H;
 function placeSeat(){const s=document.getElementById('seat');const ppm=pxPerM();
- s.style.width=Math.round(0.62*ppm)+'px';s.style.height=Math.round(0.47*ppm)+'px';s.style.bottom=Math.round(0.06*ppm)+'px';
+ s.style.width=Math.round(0.78*ppm)+'px';s.style.height=Math.round(0.86*ppm)+'px';s.style.bottom='0px';
  s.style.left=Math.max(16,innerWidth*0.035)+'px';}
 addEventListener('resize',placeSeat);
 // she walks backwards dragging the layer in from the right edge
@@ -263,17 +281,23 @@ async function ropeRaise(){avatar.rotation.y=0;play('pull_rope',0.3);
 
 // ---------- break physics for DOM pieces ----------
 const pieces=[];let simRunning=false;
-function launch(els,fromX,power=1){els.forEach(el=>{if(el._p)return;const r=el.getBoundingClientRect();const cx=r.left+r.width/2;
+function launch(els,fromX,power=1){els.forEach(el=>{const cx=(()=>{const r=el.getBoundingClientRect();return r.left+r.width/2})();
  const dir=Math.sign(cx-fromX)||(Math.random()<.5?-1:1);
- const p={el,x:0,y:0,rot:0,vx:dir*(260+Math.random()*420)*power,vy:-(380+Math.random()*420)*power,vr:(Math.random()-.5)*720,rest:false,bottom:r.bottom,left:r.left,right:r.right,h:r.height};
- el._p=p;pieces.push(p);});
- if(!simRunning){simRunning=true;let last=performance.now();const step=t=>{const dt=Math.min(0.033,(t-last)/1000);last=t;let moving=false;
+ const vx=dir*(260+Math.random()*420)*power,vy=-(380+Math.random()*420)*power,vr=(Math.random()-.5)*720;
+ if(el._p){const p=el._p;if(p.out)return;p.vx+=vx*0.8;p.vy=vy*0.8;p.vr+=vr*0.5;p.rest=false;return;}  // already down: bounce it again
+ const r=el.getBoundingClientRect();
+ const p={el,x:0,y:0,rot:0,vx,vy,vr,rest:false,out:false,bottom:r.bottom,left:r.left,right:r.right,h:r.height};
+ el._p=p;pieces.push(p);});startSim();}
+function sweep(fromX){pieces.forEach(p=>{const cx=p.left+p.x+(p.right-p.left)/2;const dir=Math.sign(cx-fromX)||1;
+ p.out=true;p.rest=false;p.vx=dir*(1400+Math.random()*900);p.vy=-(700+Math.random()*700);p.vr=(Math.random()-.5)*1400;});startSim();}
+function startSim(){if(simRunning)return;simRunning=true;let last=performance.now();const step=t=>{const dt=Math.min(0.033,(t-last)/1000);last=t;let moving=false;
   for(const p of pieces){if(p.rest)continue;moving=true;p.vy+=2200*dt;p.x+=p.vx*dt;p.y+=p.vy*dt;p.rot+=p.vr*dt;
-   const floor=innerHeight-6-p.bottom; if(p.y>floor){p.y=floor;p.vy*=-0.28;p.vx*=0.7;p.vr*=0.6;if(Math.abs(p.vy)<60){p.vy=0;p.vr*=0.9;if(Math.abs(p.vx)<20)p.rest=true;}}
-   if(p.left+p.x<0){p.x=-p.left;p.vx=Math.abs(p.vx)*0.4}
-   if(p.right+p.x>innerWidth){p.x=innerWidth-p.right;p.vx=-Math.abs(p.vx)*0.4}
+   if(p.out){const l=p.left+p.x,rr=p.right+p.x;if(rr<-200||l>innerWidth+200||p.y>innerHeight+400){p.rest=true;p.el.style.visibility='hidden';}}
+   else{const floor=innerHeight-6-p.bottom; if(p.y>floor){p.y=floor;p.vy*=-0.28;p.vx*=0.7;p.vr*=0.6;if(Math.abs(p.vy)<60){p.vy=0;p.vr*=0.9;if(Math.abs(p.vx)<20)p.rest=true;}}
+    if(p.left+p.x<0){p.x=-p.left;p.vx=Math.abs(p.vx)*0.4}
+    if(p.right+p.x>innerWidth){p.x=innerWidth-p.right;p.vx=-Math.abs(p.vx)*0.4}}
    p.el.style.transform=`translate(${p.x}px,${p.y}px) rotate(${p.rot}deg)`;}
-  if(moving)requestAnimationFrame(step);else simRunning=false;};requestAnimationFrame(step);}}
+  if(moving)requestAnimationFrame(step);else simRunning=false;};requestAnimationFrame(step);}
 const q=s=>[...document.querySelectorAll(s)];
 const centerX=el=>{const r=el.getBoundingClientRect();return r.left+r.width/2};
 
@@ -308,11 +332,16 @@ async function run(){
   // 5. pull the blocks up from below
   await sleep(350);reveal.style.transition='';
   expr('effort');await ropeRaise();
-  // 6. walk to the corner and sit on the block
-  expr('happy');const seat=document.getElementById('seat');
-  await walkTo(centerX(seat));await turnTo(0,300);
+  // 6. one more kick: the debris flies off the screen
+  await turnTo(Math.PI/2,200);
+  expr('angry');a=play('mma_low_kick',0.2);await waitClip(a,0.36);expr('shout');await waitClip(a,0.42);
+  sweep(worldToScreenX(avatar.position.x)-innerWidth*0.4);
+  await waitClip(a,0.95);
+  // 7. walk to the corner and sit behind the block (only her upper body shows)
+  expr('happy');const seat=document.getElementById('seat');seat.classList.add('up');
+  await sleep(300);await walkTo(centerX(seat));await turnTo(0,300);
   avatar.position.z=0.5;a=play('stand_to_sit',0.3);await waitClip(a,0.97);
-  play('sitting_idle',0.3);expr('proud');
+  play('sitting_idle',0.3);expr('proud');tracking=true;
   again.hidden=false;gridbtn.hidden=false;
 }
 function arm(){if(armed)return;armed=true;clearTimeout(timer);timer=setTimeout(run,reduce?1500:5000);}
@@ -321,9 +350,9 @@ setTimeout(()=>{if(!armed){armed=true;run();}},15000); // fallback for someone w
 
 const reveal=document.getElementById('reveal'),gridbtn=document.getElementById('gridbtn');
 gridbtn.onclick=()=>{const on=reveal.classList.toggle('grid-on');gridbtn.setAttribute('aria-pressed',on);gridbtn.textContent=on?'הסתר גריד':'הצג גריד';};
-again.onclick=()=>{reveal.classList.remove('on','grid-on');reveal.style.transform='';avatar.position.z=0;q('#reveal .rise').forEach(e=>e.classList.remove('up'));reveal.setAttribute('aria-hidden','true');gridbtn.hidden=true;gridbtn.textContent='הצג גריד';pieces.forEach(p=>{p.el.style.transform='';p.el._p=null});pieces.length=0;
- expr('neutral');avatar.visible=false;Object.values(acts).forEach(x=>x.stop());current=null;started=false;armed=false;again.hidden=true;show(0);say('ready — click anything to start the 5s timer');};
+again.onclick=()=>{reveal.classList.remove('on','grid-on');reveal.style.transform='';avatar.position.z=0;q('#reveal .rise').forEach(e=>e.classList.remove('up'));reveal.setAttribute('aria-hidden','true');gridbtn.hidden=true;gridbtn.textContent='הצג גריד';pieces.forEach(p=>{p.el.style.transform='';p.el.style.visibility='';p.el._p=null});document.getElementById('seat').classList.remove('up');pieces.length=0;
+ tracking=false;lookYaw=lookPitch=0;expr('neutral');avatar.visible=false;Object.values(acts).forEach(x=>x.stop());current=null;started=false;armed=false;again.hidden=true;show(0);say('ready — click anything to start the 5s timer');};
 
 const clock=new THREE.Clock();
-renderer.setAnimationLoop(()=>{const dt=clock.getDelta();if(mixer)mixer.update(dt);if(faces.length)updateFace(dt);renderer.render(scene,cam);});
+renderer.setAnimationLoop(()=>{const dt=clock.getDelta();if(mixer)mixer.update(dt);if(tracking&&avatar)updateLook(dt);if(faces.length)updateFace(dt);renderer.render(scene,cam);});
 </script>
