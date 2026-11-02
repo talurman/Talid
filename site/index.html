@@ -147,7 +147,6 @@ button:focus-visible{outline:3px solid var(--ink);outline-offset:2px}
     <div class="r-debris"><p class="lbl" style="margin-top:var(--u)">שברים — הטופסולוגיה</p></div>
   </div>
 </section>
-<div id="seat" aria-hidden="true">01</div>
 <canvas id="stage3d" aria-hidden="true"></canvas>
 <p id="status">loading avatar…</p>
 <button type="button" id="again" hidden>להתחיל מחדש</button>
@@ -252,7 +251,9 @@ const _q=new THREE.Quaternion(),_qp=new THREE.Quaternion(),_e=new THREE.Euler(),
 function aim(bone,yaw,pitch){if(!bone)return;bone.updateWorldMatrix(true,false);
  bone.getWorldQuaternion(_q);_e.set(pitch,yaw,0,'YXZ');const d=new THREE.Quaternion().setFromEuler(_e);
  const w=d.multiply(_q);bone.parent.getWorldQuaternion(_qp);bone.quaternion.copy(_qp.invert().multiply(w));}
+const eyeRest={};
 function updateLook(dt){const head=avatar.getObjectByName('Head');if(!head)return;
+ for(const n of ['LeftEye','RightEye']){const b=avatar.getObjectByName(n);if(!b)continue;if(!eyeRest[n])eyeRest[n]=b.quaternion.clone();b.quaternion.copy(eyeRest[n]);}
  head.getWorldPosition(_v);_v.project(cam);
  const hx=(_v.x+1)/2*innerWidth,hy=(1-_v.y)/2*innerHeight;
  const ty=THREE.MathUtils.clamp((mouseX-hx)/innerWidth*2.2,-1,1)*0.9;
@@ -267,7 +268,7 @@ const pxPerM=()=>innerHeight/VIEW_H;
 function placeSeat(){const s=document.getElementById('seat');const ppm=pxPerM();
  s.style.width=Math.round(0.78*ppm)+'px';s.style.height=Math.round(0.86*ppm)+'px';s.style.bottom='0px';
  s.style.left=Math.max(16,innerWidth*0.035)+'px';}
-addEventListener('resize',placeSeat);
+
 // she walks backwards dragging the layer in from the right edge
 function dragLayer(stopPx){return new Promise(r=>{avatar.rotation.y=Math.PI/2;play('pull_heavy',0.3);
  const reach=0.42; let last=performance.now();const tx=screenToWorldX(stopPx);
@@ -326,7 +327,7 @@ async function run(){
   await waitClip(a,0.95);
   // 4. build: drag the new layer in from the side
   expr('curious');await walkTo(innerWidth*0.86);
-  reveal.classList.add('on');reveal.removeAttribute('aria-hidden');placeSeat();
+  reveal.classList.add('on');reveal.removeAttribute('aria-hidden');
   expr('effort');await dragLayer(innerWidth*0.22);
   reveal.style.transition='transform .5s cubic-bezier(.2,.8,.2,1)';reveal.style.transform='translateX(0)';
   // 5. pull the blocks up from below
@@ -338,9 +339,10 @@ async function run(){
   sweep(worldToScreenX(avatar.position.x)-innerWidth*0.4);
   await waitClip(a,0.95);
   // 7. walk to the corner and sit behind the block (only her upper body shows)
-  expr('happy');const seat=document.getElementById('seat');seat.classList.add('up');
-  await sleep(300);await walkTo(centerX(seat));await turnTo(0,300);
-  avatar.position.z=0.5;a=play('stand_to_sit',0.3);await waitClip(a,0.97);
+  expr('happy');
+  await walkTo(Math.max(90,innerWidth*0.09));await turnTo(0,300);
+  avatar.position.z=0.5;a=play('stand_to_sit',0.3);
+  await new Promise(r=>{const t0=performance.now(),dur=a.getClip().duration*1000*0.95;const f=t=>{const k=Math.min(1,(t-t0)/dur);avatar.position.y=-0.8*(k*k*(3-2*k));k<1?requestAnimationFrame(f):r()};requestAnimationFrame(f);});
   play('sitting_idle',0.3);expr('proud');tracking=true;
   again.hidden=false;gridbtn.hidden=false;
 }
@@ -350,8 +352,8 @@ setTimeout(()=>{if(!armed){armed=true;run();}},15000); // fallback for someone w
 
 const reveal=document.getElementById('reveal'),gridbtn=document.getElementById('gridbtn');
 gridbtn.onclick=()=>{const on=reveal.classList.toggle('grid-on');gridbtn.setAttribute('aria-pressed',on);gridbtn.textContent=on?'הסתר גריד':'הצג גריד';};
-again.onclick=()=>{reveal.classList.remove('on','grid-on');reveal.style.transform='';avatar.position.z=0;q('#reveal .rise').forEach(e=>e.classList.remove('up'));reveal.setAttribute('aria-hidden','true');gridbtn.hidden=true;gridbtn.textContent='הצג גריד';pieces.forEach(p=>{p.el.style.transform='';p.el.style.visibility='';p.el._p=null});document.getElementById('seat').classList.remove('up');pieces.length=0;
- tracking=false;lookYaw=lookPitch=0;expr('neutral');avatar.visible=false;Object.values(acts).forEach(x=>x.stop());current=null;started=false;armed=false;again.hidden=true;show(0);say('ready — click anything to start the 5s timer');};
+again.onclick=()=>{reveal.classList.remove('on','grid-on');reveal.style.transform='';avatar.position.z=0;q('#reveal .rise').forEach(e=>e.classList.remove('up'));reveal.setAttribute('aria-hidden','true');gridbtn.hidden=true;gridbtn.textContent='הצג גריד';pieces.forEach(p=>{p.el.style.transform='';p.el.style.visibility='';p.el._p=null});pieces.length=0;
+ tracking=false;lookYaw=lookPitch=0;avatar.position.y=0;expr('neutral');avatar.visible=false;Object.values(acts).forEach(x=>x.stop());current=null;started=false;armed=false;again.hidden=true;show(0);say('ready — click anything to start the 5s timer');};
 
 const clock=new THREE.Clock();
 renderer.setAnimationLoop(()=>{const dt=clock.getDelta();if(mixer)mixer.update(dt);if(tracking&&avatar)updateLook(dt);if(faces.length)updateFace(dt);renderer.render(scene,cam);});
