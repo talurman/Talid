@@ -147,6 +147,7 @@ button:focus-visible{outline:3px solid var(--ink);outline-offset:2px}
     <div class="r-debris"><p class="lbl" style="margin-top:var(--u)">שברים — הטופסולוגיה</p></div>
   </div>
 </section>
+<svg id="rope" aria-hidden="true" style="position:fixed;inset:0;width:100%;height:100%;z-index:19;pointer-events:none;display:none"><line stroke="#000" stroke-width="2" x1="0" y1="0" x2="0" y2="0"/></svg>
 <canvas id="stage3d" aria-hidden="true"></canvas>
 <p id="status">loading avatar…</p>
 <button type="button" id="again" hidden>להתחיל מחדש</button>
@@ -276,9 +277,22 @@ function dragLayer(stopPx){return new Promise(r=>{avatar.rotation.y=Math.PI/2;pl
   const edge=worldToScreenX(avatar.position.x+reach);reveal.style.transform=`translateX(${Math.max(0,edge)}px)`;
   if(avatar.position.x<=tx){r();}else requestAnimationFrame(f)};requestAnimationFrame(f);});}
 // hand-over-hand pulls raise the grid blocks from below, one by one
-async function ropeRaise(){avatar.rotation.y=0;play('pull_rope',0.3);
- for(const el of q('#reveal .rise')){await sleep(reduce?60:420);el.classList.add('up');}
- await sleep(700);}
+// the blocks are tied to a rope in her hands: every downward tug lifts them
+const ropeSvg=document.getElementById('rope'),ropeLine=ropeSvg.querySelector('line');
+function handScreen(){const L=avatar.getObjectByName('LeftHand'),R=avatar.getObjectByName('RightHand');
+ const a=new THREE.Vector3(),b=new THREE.Vector3();L.getWorldPosition(a);R.getWorldPosition(b);a.add(b).multiplyScalar(0.5).project(cam);
+ return {x:(a.x+1)/2*innerWidth,y:(1-a.y)/2*innerHeight};}
+function ropeRaise(){return new Promise(r=>{avatar.rotation.y=0;play('pull_rope',0.3);
+ const els=q('#reveal .rise');els.forEach(e=>{e.style.transition='none';e.style.transform='translateY(110vh)';});
+ ropeSvg.style.display='block';let prev=null,acc=0;const need=innerHeight*1.6,t0=performance.now();
+ const f=t=>{const h=handScreen();ropeLine.setAttribute('x1',h.x);ropeLine.setAttribute('y1',h.y);ropeLine.setAttribute('x2',h.x);ropeLine.setAttribute('y2',innerHeight+10);
+  if(prev!==null&&h.y>prev)acc+=h.y-prev; prev=h.y;
+  if(t-t0>14000)acc=need;                       // safety: never get stuck
+  const prog=Math.min(1,acc/need);
+  els.forEach((e,i)=>{const start=i*0.07,k=Math.max(0,Math.min(1,(prog-start)/0.45));const ease=1-Math.pow(1-k,3);e.style.transform=`translateY(${(1-ease)*110}vh)`;});
+  if(prog>=1){els.forEach(e=>{e.style.transform='';e.style.transition='';e.classList.add('up');});ropeSvg.style.display='none';r();}
+  else requestAnimationFrame(f);};
+ requestAnimationFrame(f);});}
 
 // ---------- break physics for DOM pieces ----------
 const pieces=[];let simRunning=false;
@@ -352,7 +366,7 @@ setTimeout(()=>{if(!armed){armed=true;run();}},15000); // fallback for someone w
 
 const reveal=document.getElementById('reveal'),gridbtn=document.getElementById('gridbtn');
 gridbtn.onclick=()=>{const on=reveal.classList.toggle('grid-on');gridbtn.setAttribute('aria-pressed',on);gridbtn.textContent=on?'הסתר גריד':'הצג גריד';};
-again.onclick=()=>{reveal.classList.remove('on','grid-on');reveal.style.transform='';avatar.position.z=0;q('#reveal .rise').forEach(e=>e.classList.remove('up'));reveal.setAttribute('aria-hidden','true');gridbtn.hidden=true;gridbtn.textContent='הצג גריד';pieces.forEach(p=>{p.el.style.transform='';p.el.style.visibility='';p.el._p=null});pieces.length=0;
+again.onclick=()=>{reveal.classList.remove('on','grid-on');reveal.style.transform='';avatar.position.z=0;q('#reveal .rise').forEach(e=>{e.classList.remove('up');e.style.transform='';e.style.transition='';});ropeSvg.style.display='none';reveal.setAttribute('aria-hidden','true');gridbtn.hidden=true;gridbtn.textContent='הצג גריד';pieces.forEach(p=>{p.el.style.transform='';p.el.style.visibility='';p.el._p=null});pieces.length=0;
  tracking=false;lookYaw=lookPitch=0;avatar.position.y=0;expr('neutral');avatar.visible=false;Object.values(acts).forEach(x=>x.stop());current=null;started=false;armed=false;again.hidden=true;show(0);say('ready — click anything to start the 5s timer');};
 
 const clock=new THREE.Clock();
