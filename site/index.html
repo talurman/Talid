@@ -1,3 +1,9 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 16 16%22%3E%3Crect width=%2216%22 height=%2216%22 fill=%22%23000%22/%3E%3C/svg%3E">
 <title>תעודת זהות – טל אורמן</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -39,7 +45,7 @@ button:focus-visible{outline:3px solid var(--ink);outline-offset:2px}
 [data-b]{will-change:transform;transform-origin:50% 50%}
 #stage3d{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:20}
 #again{position:fixed;bottom:calc(16px + env(safe-area-inset-bottom,0px));right:max(16px,env(safe-area-inset-right,0px));z-index:30;min-height:44px;padding:0 18px;border-radius:999px;border:1.5px solid var(--ink);background:var(--bg);color:var(--ink);font-size:14px;cursor:pointer}
-#status{position:fixed;top:calc(8px + env(safe-area-inset-top,0px));left:max(16px,env(safe-area-inset-left,0px));z-index:30;font:12px/1.4 ui-monospace,monospace;color:var(--muted);direction:ltr}
+#status{display:none;position:fixed;top:calc(8px + env(safe-area-inset-top,0px));left:max(16px,env(safe-area-inset-left,0px));z-index:30;font:12px/1.4 ui-monospace,monospace;color:var(--muted);direction:ltr}
 
 /* ===== Layer 3: the revealed order (Swiss grid). 12 cols, 8px baseline, one family, black/white ===== */
 :root{--r-bg:#FFFFFF;--r-ink:#000000;--r-mid:#8A8A8A;--r-ph:#EDEDED;--r-guide:rgba(255,0,0,.12);--r-sans:'IBM Plex Sans Hebrew',Arial,sans-serif;--r-mono:'IBM Plex Mono',ui-monospace,monospace;--u:8px}
@@ -81,6 +87,8 @@ button:focus-visible{outline:3px solid var(--ink);outline-offset:2px}
 #again{border-radius:0!important;font-family:var(--r-mono)!important;background:#fff!important;border-color:#000!important;color:#000!important}
 @media (max-width:900px){#reveal{overflow:auto}.g{height:auto;grid-template-rows:none}.r-name,.r-role,.r-text,.r-facts,.r-mat,.r-debris{grid-column:1/13;grid-row:auto}.r-mat{height:60vw}.r-debris{height:30vh}}
 </style>
+</head>
+<body>
 
 <div class="shell" dir="rtl">
   <header class="wrap">
@@ -361,7 +369,7 @@ async function run(){
   again.hidden=false;gridbtn.hidden=false;
 }
 function arm(){if(armed)return;armed=true;clearTimeout(timer);timer=setTimeout(run,reduce?1500:5000);}
-['pointerdown','keydown','wheel','touchstart'].forEach(ev=>addEventListener(ev,arm,{passive:true}));
+['pointerdown','click','keydown','wheel','touchstart','scroll'].forEach(ev=>addEventListener(ev,arm,{passive:true}));
 setTimeout(()=>{if(!armed){armed=true;run();}},15000); // fallback for someone who only watches
 
 const reveal=document.getElementById('reveal'),gridbtn=document.getElementById('gridbtn');
@@ -372,3 +380,6 @@ again.onclick=()=>{reveal.classList.remove('on','grid-on');reveal.style.transfor
 const clock=new THREE.Clock();
 renderer.setAnimationLoop(()=>{const dt=clock.getDelta();if(mixer)mixer.update(dt);if(tracking&&avatar)updateLook(dt);if(faces.length)updateFace(dt);renderer.render(scene,cam);});
 </script>
+
+</body>
+</html>
